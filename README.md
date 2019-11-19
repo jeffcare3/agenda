@@ -25,7 +25,6 @@
 - Event backed job queue that you can hook into.
 - [Agendash](https://github.com/agenda/agendash): optional standalone web-interface.
 - [Agenda-rest](https://github.com/agenda/agenda-rest): optional standalone REST API.
-- [inversify-agenda](https://github.com/lautarobock/inversify-agenda) - Some utilities for the development of agenda workers with Inversify
 
 ### Feature Comparison
 
@@ -417,6 +416,10 @@ under `job.attrs.data`.
 `options` is an optional argument that will be passed to [`job.repeatEvery`](#repeateveryinterval-options).
 In order to use this argument, `data` must also be specified.
 
+`cb` is an optional callback function which will be called when the job has been
+persisted in the database.
+
+
 Returns the `job`.
 
 ```js
@@ -445,6 +448,9 @@ Schedules a job to run `name` once at a given time. `when` can be a `Date` or a
 
 `data` is an optional argument that will be passed to the processing function
 under `job.attrs.data`.
+
+`cb` is an optional callback function which will be called when the job has been
+persisted in the database.
 
 Returns the `job`.
 
@@ -496,24 +502,28 @@ const jobs = await agenda.jobs({name: 'printAnalyticsReport'}, {data:-1}, 3);
 // Work with jobs (see below)
 ```
 
-### cancel(mongodb-native query)
+### cancel(mongodb-native query, cb)
 
-Cancels any jobs matching the passed mongodb-native query, and removes them from the database. Returns a Promise resolving to the number of cancelled jobs, or rejecting on error.
+Cancels any jobs matching the passed mongodb-native query, and removes them from the database.
 
 ```js
-const numRemoved = await agenda.cancel({name: 'printAnalyticsReport'});
+agenda.cancel({name: 'printAnalyticsReport'}, (err, numRemoved) => {
+  // ...
+});
 ```
 
 This functionality can also be achieved by first retrieving all the jobs from the database using `agenda.jobs()`, looping through the resulting array and calling `job.remove()` on each. It is however preferable to use `agenda.cancel()` for this use case, as this ensures the operation is atomic.
 
-### purge()
+### purge(cb)
 
-Removes all jobs in the database without defined behaviors. Useful if you change a definition name and want to remove old jobs. Returns a Promise resolving to the number of removed jobs, or rejecting on error.
+Removes all jobs in the database without defined behaviors. Useful if you change a definition name and want to remove old jobs.
 
 *IMPORTANT:* Do not run this before you finish defining all of your jobs. If you do, you will nuke your database of jobs.
 
 ```js
-const numRemoved = await agenda.purge();
+agenda.purge((err, numRemoved) => {
+  // ...
+});
 ```
 
 ## Starting the job processor
